@@ -15,10 +15,11 @@ python2.7 generateNoise.py -in /home/user/datasets/dtd/images/ -type gaussian -s
 
 Run MATLAB function:
 addNoise(**pathImages**, **extImages**, **noiseType**, **noiseLevel**)
-**pathImages** : Path with input images 
-**extImages**  : Image type (jpg or png)
-**noiseType**  : Noise type (gaussian or poisson)
-**noiseLevel** : Noise level (gaussian 0-50 ---- poisson 1-12)
+
+* **pathImages** : Path with input images 
+* **extImages**  : Image type (jpg or png)
+* **noiseType**  : Noise type (gaussian or poisson)
+* **noiseLevel** : Noise level (gaussian 0-50 ---- poisson 1-12)
 
 
 ```
