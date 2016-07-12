@@ -36,7 +36,7 @@ def hist(ax, lbp):
     return ax.hist(lbp.ravel(), normed=True, bins=n_bins, range=(0, n_bins),
                    facecolor='0.5')
 
-def print_lbp_image(img, lbp, filename):
+def print_lbp_image(img, lbp, filename="lbp.png"):
     fig, (ax_img, ax_hist) = plt.subplots(nrows=2, ncols=3, figsize=(9, 6))
     plt.gray()
 
@@ -67,7 +67,7 @@ def print_lbp_image(img, lbp, filename):
 
     plt.savefig(filename)
 
-def print_daisy_image(daisy_img, daisy_descs, filename):
+def print_daisy_image(daisy_img, daisy_descs, filename="daisy.png"):
     fig, ax = plt.subplots()
     ax.axis('off')
     ax.imshow(daisy_img)
@@ -77,18 +77,14 @@ def print_daisy_image(daisy_img, daisy_descs, filename):
 
 def extract_features():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '-d', '--dataset', required=True,
-        help="path to the dataset folder")
-    parser.add_argument(
-        '-f', '--feature_extraction', required=False,
-        default="HOG",
-        help="name of the feature extraction method that will be used (Possible methods: 'HOG', 'LBP', 'DAISY', 'SIFT', ...).", choices=['HOG', 'LBP', 'DAISY', 'SIFT'])
-    parser.add_argument(
-        '-v', '--verbose', action='count', help="verbosity level.")
+    parser.add_argument('-d', '--dataset', required=True,        help="path to the dataset folder")
+    parser.add_argument('-f', '--feature_extraction', required=False, default="HOG", help="name of the feature extraction method that will be used (Possible methods: 'HOG', 'LBP', 'DAISY', 'SIFT', ...).", choices=['HOG', 'LBP', 'DAISY', 'SIFT'])
+    parser.add_argument('-s', '--save_image', help="Print image  comparison of the original image and a visualization of the descriptors extracted.", default=False)
+    parser.add_argument('-v', '--verbose', action='count', help="verbosity level.")
     args = parser.parse_args()
 
     classes = next(os.walk(args.dataset))[1]
+    fv_matrix =
 
     for ii in classes:
         img_dir = '%s/%s' % (dataset, ii)
@@ -103,6 +99,11 @@ def extract_features():
 
                 fd, hod_img = hog(img_gray, orientations=8, pixels_per_cell=(16, 16),                              cells_per_block=(1, 1), visualise=True)
 
+                fv_matrix = np.stack((fv_matrix, fd), axis=-1)
+
+                if(args.save_image == True):
+                    print_hog_images(img_gray, hog_img, filename="hog.png")
+
             elif(args.feature_extraction == "LBP"):
                 img_gray = color.rgb2gray(img)
 
@@ -113,10 +114,16 @@ def extract_features():
 
                 lbp = local_binary_pattern(img_gray, n_points, radius, METHOD)
 
+                if(args.save_image == True):
+                    print_lbp_image(img_gray, lbp, filename="lbp.png")
+
             elif(args.feature_extraction == "DAISY"):
                 img_gray = color.rgb2gray(img)
 
                 descs, descs_img = daisy(img_gray, step=180, radius=58, rings=2, histograms=6, orientations=8, visualize=True)
+
+                if(args.save_image == True):
+                    print_lbp_image(img_gray, descs, filename="daisy.png")
 
             elif(args.feature_extraction == "SIFT")
 
