@@ -2,7 +2,7 @@ ls
 # import cv2
 import os
 import numpy as np
-from skimage.feature import hog, local_binary_pattern
+from skimage.feature import hog, local_binary_pattern, daisy
 from skimage import io, color, exposure
 import matplotlib.pyplot as plt
 
@@ -36,7 +36,7 @@ def hist(ax, lbp):
     return ax.hist(lbp.ravel(), normed=True, bins=n_bins, range=(0, n_bins),
                    facecolor='0.5')
 
-def print_lbp_image(img, lbp):
+def print_lbp_image(img, lbp, filename):
     fig, (ax_img, ax_hist) = plt.subplots(nrows=2, ncols=3, figsize=(9, 6))
     plt.gray()
 
@@ -65,6 +65,16 @@ def print_lbp_image(img, lbp):
     for ax in ax_img:
         ax.axis('off')
 
+    plt.savefig(filename)
+
+def print_daisy_image(daisy_img, daisy_descs, filename):
+    fig, ax = plt.subplots()
+    ax.axis('off')
+    ax.imshow(daisy_img)
+    descs_num = daisy_descs.shape[0] * daisy_descs.shape[1]
+    ax.set_title('%i DAISY descriptors extracted:' % descs_num)
+    plt.savefig(filename)
+
 def extract_features():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -73,7 +83,7 @@ def extract_features():
     parser.add_argument(
         '-f', '--feature_extraction', required=False,
         default="HOG",
-        help="name of the feature extraction method that will be used (Possible methods: 'HOG', 'LBP', ...).")
+        help="name of the feature extraction method that will be used (Possible methods: 'HOG', 'LBP', 'DAISY', 'SIFT', ...).", choices=['HOG', 'LBP', 'DAISY', 'SIFT'])
     parser.add_argument(
         '-v', '--verbose', action='count', help="verbosity level.")
     args = parser.parse_args()
@@ -88,10 +98,10 @@ def extract_features():
             img = io.imread(jj, 1)
 
             if(args.feature_extraction == "HOG"):
+                # TODO: deal with images with different sizes (descritors should have the same size)
                 img_gray = color.rgb2gray(img)
 
                 fd, hod_img = hog(img_gray, orientations=8, pixels_per_cell=(16, 16),                              cells_per_block=(1, 1), visualise=True)
-                # TODO: deal with images with different sizes (descritors should have the same size)
 
             elif(args.feature_extraction == "LBP"):
                 img_gray = color.rgb2gray(img)
@@ -103,6 +113,12 @@ def extract_features():
 
                 lbp = local_binary_pattern(img_gray, n_points, radius, METHOD)
 
+            elif(args.feature_extraction == "DAISY"):
+                img_gray = color.rgb2gray(img)
+
+                descs, descs_img = daisy(img_gray, step=180, radius=58, rings=2, histograms=6, orientations=8, visualize=True)
+
+            elif(args.feature_extraction == "SIFT")
 
 
             # TODO: extract features of one image
