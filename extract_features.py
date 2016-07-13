@@ -1,9 +1,11 @@
 # import cv2
+import dsift
 import os, argparse
 import numpy as np
 import pandas as pd
 from skimage.feature import hog, local_binary_pattern, daisy
 from skimage import io, color, exposure
+from scipy import misc
 import matplotlib.pyplot as plt
 
 def print_hog_images(img_gray, hog_img, filename="hog.png"):
@@ -78,19 +80,24 @@ def print_daisy_image(daisy_img, daisy_descs, filename="daisy.png"):
 def extract_features():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--dataset', required=True,        help="path to the dataset folder")
-    parser.add_argument('-f', '--feature_extraction', required=False, default="HOG", help="name of the feature extraction method that will be used (Possible methods: 'HOG', 'LBP', 'DAISY', 'SIFT', ...).", choices=['HOG', 'LBP', 'DAISY', 'SIFT'])
+    parser.add_argument('-f', '--feature_extraction', required=False, default="HOG", help="name of the feature extraction method that will be used (Possible methods: 'HOG', 'LBP', 'SIFT', ...).", choices=['HOG', 'LBP',  'SIFT'])
     # TODO: set filename used to save images as parameter
     parser.add_argument('-s', '--save_image', help="Save image  comparison of the original image and a visualization of the descriptors extracted.", default=False)
     # TODO: use verbose parameter to track progress
     parser.add_argument('-v', '--verbose', action='count', help="verbosity level.")
     args = parser.parse_args()
 
+    extensionsToCheck = ['.png', '.jpg', '.jpeg', '.bmp', '.gif']
+
     classes = next(os.walk(args.dataset))[1]
     fv_matrix = np.array([])
+    labels = []
+    img_names = []
 
     for ii in classes:
         img_dir = '%s/%s' % (args.dataset, ii)
-        img_files = ['%s/%s' % (img_dir, img) for img in os.listdir(img_dir)]
+        # img_files = ['%s/%s' % (img_dir, img) for img in os.listdir(img_dir)]
+        img_files = ['%s/%s' % (img_dir, img) for img in os.listdir(img_dir) if any(ext in img for ext in extensionsToCheck)]
 
         for jj in img_files:
             img = io.imread(jj, 1)
@@ -108,7 +115,6 @@ def extract_features():
 
             elif(args.feature_extraction == "LBP"):
                 img_gray = color.rgb2gray(img)
-                print img_gray.shape
                 # LBP Parameters
                 radius = 1 # 3
                 n_points = 8 * radius
@@ -124,6 +130,7 @@ def extract_features():
                     print_lbp_image(img_gray, lbp, filename="lbp.png")
 
             elif(args.feature_extraction == "DAISY"):
+                # TODO: Fix bugs! Problems with the selected parameter values
                 img_gray = color.rgb2gray(img)
 
                 descs, descs_img = daisy(img_gray, step=180, radius=58, rings=2, histograms=6, orientations=8, visualize=True)
@@ -133,20 +140,39 @@ def extract_features():
                 if(args.save_image == True):
                     print_lbp_image(img_gray, descs, filename="daisy.png")
 
+            # elif(args.feature_extraction == "ORB"):
             elif(args.feature_extraction == "SIFT"):
-                # TODO: extract  SIFT features of one image
-                return
+                img_gray = color.rgb2gray(img)
+                img_gray = np.array(img_gray)
 
-    # TODO: save matrix of descriptors
+                # Sample Usage:
+                #     extractor = DsiftExtractor(gridSpacing,patchSize,[optional params])
+                #     feaArr,positions = extractor.process_image(Image)
+                # Source:  https://github.com/Yangqing/dsift-python
+
+                extractor = dsift.DsiftExtractor(8,16,1)
+                feaArr,positions = extractor.process_image(img_gray)
+
+                feaArr = np.reshape(feaArr, feaArr.shape[0] * feaArr.shape[1])
+
+                fv_matrix = np.vstack([fv_matrix, feaArr]) if fv_matrix.size else feaArr
+
+            labels.append(ii)
+            img_names.append(jj.split('/')[-1])
+
+
     columns = ['Feat'+str(i) for i in range(1, fv_matrix.shape[1]+1)]
-    index = ['Sample'+str(i) for i in range(1, fv_matrix.shape[0]+1)]
-    df = pd.DataFrame(data=fv_matrix, index=index, columns=columns)
+    # index = ['Sample'+str(i) for i in range(1, fv_matrix.shape[0]+1)]
+    df = pd.DataFrame(data=fv_matrix, index=img_names, columns=columns)
+    df['Labels'] = labels
 
-    # TODO: set hdf5 file name as parameter
-    hdf = pd.HDFStore('descs.h5')
-    # TODO: set 'd1' to dataset name + descriptor used
-    # IDEA: store all descriptors from a dataset in the same hdf5 file with different keys
-    hdf.put('d1', df, format='table', data_columns=True)
+    dataset_name = args.dataset.split('/')[-2]
+    hdf = pd.HDFStore("%s.%s" % (dataset_name, 'h5'))
+
+    if(args.feature_extraction == "SIFT"):
+        hdf.put(args.feature_extraction, df, data_columns=True)
+    else:
+        hdf.put(args.feature_extraction, df, format='table', data_columns=True)
     hdf.close()
 
 
