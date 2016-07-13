@@ -4,6 +4,7 @@ import os, argparse
 import numpy as np
 import pandas as pd
 from skimage.feature import hog, local_binary_pattern, daisy
+from skimage.transform import resize
 from skimage import io, color, exposure
 from scipy import misc
 import matplotlib.pyplot as plt
@@ -77,6 +78,26 @@ def print_daisy_image(daisy_img, daisy_descs, filename="daisy.png"):
     ax.set_title('%i DAISY descriptors extracted:' % descs_num)
     plt.savefig(filename)
 
+def find_smallest_shape(dataset, extensionsToCheck):
+    img_new_shape = [float("inf"), float("inf")]
+    classes = next(os.walk(dataset))[1]
+
+    for ii in classes:
+        img_dir = '%s/%s' % (dataset, ii)
+        # img_files = ['%s/%s' % (img_dir, img) for img in os.listdir(img_dir)]
+        img_files = ['%s/%s' % (img_dir, img) for img in os.listdir(img_dir) if any(ext in img for ext in extensionsToCheck)]
+
+        for jj in img_files:
+            img = io.imread(jj, 1)
+
+            shape_min = img.shape[0] if img.shape[0] < img.shape[1] else img.shape[1]
+            shape_max = img.shape[0] if img.shape[0] > img.shape[1] else img.shape[1]
+
+            img_new_shape[0] = shape_min if img_new_shape[0] > shape_min else img_new_shape[0]
+            img_new_shape[1] = shape_max if img_new_shape[1] > shape_min else img_new_shape[1]
+
+    return img_new_shape
+
 def extract_features():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--dataset', required=True,        help="path to the dataset folder")
@@ -94,6 +115,9 @@ def extract_features():
     labels = []
     img_names = []
 
+    if(args.feature_extraction == "HOG" or args.feature_extraction == "SIFT"):
+        new_shape = find_smallest_shape(args.dataset, extensionsToCheck)
+
     for ii in classes:
         img_dir = '%s/%s' % (args.dataset, ii)
         # img_files = ['%s/%s' % (img_dir, img) for img in os.listdir(img_dir)]
@@ -105,6 +129,11 @@ def extract_features():
             if(args.feature_extraction == "HOG"):
                 # TODO: deal with images with different sizes (descritors should have the same size)
                 img_gray = color.rgb2gray(img)
+
+                if img_gray.shape[0] <= img_gray.shape[1]:
+                    img_gray = resize(img_gray, new_shape)
+                else:
+                    img_gray = resize(img_gray, [new_shape[1], new_shape[0]])
 
                 fd, hod_img = hog(img_gray, orientations=8, pixels_per_cell=(16, 16),                              cells_per_block=(1, 1), visualise=True)
 
@@ -144,6 +173,11 @@ def extract_features():
             elif(args.feature_extraction == "SIFT"):
                 img_gray = color.rgb2gray(img)
                 img_gray = np.array(img_gray)
+
+                if img_gray.shape[0] <= img_gray.shape[1]:
+                    img_gray = resize(img_gray, new_shape)
+                else:
+                    img_gray = resize(img_gray, [new_shape[1], new_shape[0]])
 
                 # Sample Usage:
                 #     extractor = DsiftExtractor(gridSpacing,patchSize,[optional params])
