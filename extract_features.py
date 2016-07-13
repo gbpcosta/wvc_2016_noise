@@ -203,10 +203,10 @@ def extract_features():
     dataset_name = args.dataset.split('/')[-2]
     hdf = pd.HDFStore("%s.%s" % (dataset_name, 'h5'))
 
-    if(args.feature_extraction == "SIFT"):
-        hdf.put(args.feature_extraction, df, data_columns=True)
-    else:
-        hdf.put(args.feature_extraction, df, format='table', data_columns=True)
+    # if(args.feature_extraction == "SIFT"):
+    hdf.put(args.feature_extraction, df, data_columns=True)
+    # else:
+    #     hdf.put(args.feature_extraction, df, format='table', data_columns=True)
     hdf.close()
 
 
