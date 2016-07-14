@@ -194,14 +194,14 @@ def extract_features():
             labels.append(ii)
             img_names.append(jj.split('/')[-1])
 
-
     columns = ['Feat'+str(i) for i in range(1, fv_matrix.shape[1]+1)]
     # index = ['Sample'+str(i) for i in range(1, fv_matrix.shape[0]+1)]
     df = pd.DataFrame(data=fv_matrix, index=img_names, columns=columns)
+
     df['Labels'] = labels
 
-    dataset_name = args.dataset.split('/')[-2]
-    hdf = pd.HDFStore("%s.%s" % (dataset_name, 'h5'))
+    dataset_name = "%s_%s" % (args.dataset.split('/')[-3], args.dataset.split('/')[-2])
+    hdf = pd.HDFStore("%s/%s.%s" % (args.dataset.rstrip('/').rpartition('/')[0], dataset_name, 'h5'))
 
     # if(args.feature_extraction == "SIFT"):
     hdf.put(args.feature_extraction, df, data_columns=True)
