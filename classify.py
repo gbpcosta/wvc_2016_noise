@@ -5,6 +5,7 @@ from sklearn import svm, cross_validation
 from sklearn.grid_search import GridSearchCV
 from sklearn.cross_validation import train_test_split
 from sklearn.metrics import classification_report
+from sklearn.decomposition import PCA
 
 
 def classify():
@@ -25,6 +26,18 @@ def classify():
     y = np.array(hdf["Labels"], np.str)
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+
+    if(args.feature_extraction == "SIFT"):
+        pca = PCA(n_components=0.9)
+        X_train = pca.fit_transform(X_train)
+        if(args.verbose >= 1):
+            print "PCA for dimensionality reduction"
+            print "Number of components: %d" % pca.n_components_
+            print "Total variance: %lf" % sum(pca.explained_variance_ratio_)
+            # print "Variance of each component: " + pca.explained_variance_ratio_
+
+        X_test = pca.transform(X_test)
+
 
     print "# Tuning hyper-parameters for %s" % score
     print
@@ -51,6 +64,7 @@ def classify():
     print classification_report(y_true, y_pred)
     print
 
+    # TODO: save classification results to file
 
 
 if __name__ == '__main__':
