@@ -11,7 +11,7 @@ def classify():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--dataset', required=True,        help="path to the dataset folder")
     parser.add_argument('-f', '--feature_extraction', required=True, help="name of the feature extraction method that will be used (Possible methods: 'HOG', 'LBP', 'SIFT', ...).", choices=['HOG', 'LBP',  'SIFT'])
-    parser.add_argument('-nj', '--n_jobs', required=False, default=1, help="Number of jobs used during grid search.")
+    parser.add_argument('-nj', '--n_jobs', required=False, type=int, default=1, help="Number of jobs used during grid search.")
     # TODO: use verbose parameter to track progress
     parser.add_argument('-v', '--verbose', action='count', help="verbosity level.")
     args = parser.parse_args()
