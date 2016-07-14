@@ -54,7 +54,7 @@ def classify():
     parser.add_argument('-v', '--verbose', action='count', help="verbosity level.")
     args = parser.parse_args()
 
-    tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4], 'C': [1, 10, 100, 1000]}, {'kernel': ['linear'], 'C': [1, 10, 100, 1000]}]
+    tuned_parameters = [{'kernel': ['linear'], 'C': [1, 10, 100, 1000]}] # {'kernel': ['rbf'], 'gamma': [1e-3, 1e-4], 'C': [1, 10, 100, 1000]}, 
     score = 'f1'
 
     hdf = pd.read_hdf(args.dataset, args.feature_extraction)
@@ -120,8 +120,6 @@ def classify():
     hdf = pd.HDFStore("%s/%s.%s" % (args.dataset.rpartition('/')[0], dataset_name, 'h5'))
     hdf.put("%s_prediction" % args.feature_extraction, df, data_columns=True)
     hdf.close()
-
-    # TODO: save classification results to file
 
     target_names = list(set(y_true))
     # print_names = [abrev_names[x] for x in target_names]
