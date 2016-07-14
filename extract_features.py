@@ -200,8 +200,8 @@ def extract_features():
 
     df['Labels'] = labels
 
-    dataset_name = "%s_%s" % (args.dataset.split('/')[-3], args.dataset.split('/')[-2])
-    hdf = pd.HDFStore("%s/%s.%s" % (args.dataset.rstrip('/').rpartition('/')[0], dataset_name, 'h5'))
+    dataset_name = "%s_%s" % (args.dataset.rstrip('/').split('/')[-3], args.dataset.rstrip('/').split('/')[-1])
+    hdf = pd.HDFStore("%s/%s.%s" % (args.dataset.rstrip('/').rpartition('/')[0].rstrip('/'), dataset_name, 'h5'))
 
     # if(args.feature_extraction == "SIFT"):
     hdf.put(args.feature_extraction, df, data_columns=True)
