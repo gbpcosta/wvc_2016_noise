@@ -54,7 +54,7 @@ def classify():
     parser.add_argument('-v', '--verbose', action='count', help="verbosity level.")
     args = parser.parse_args()
 
-    tuned_parameters = [{'kernel': ['linear'], 'C': [1, 10, 100, 1000]}] # {'kernel': ['rbf'], 'gamma': [1e-3, 1e-4], 'C': [1, 10, 100, 1000]}, 
+    tuned_parameters = [{'kernel': ['linear'], 'C': [1, 10, 100, 1000]}] # {'kernel': ['rbf'], 'gamma': [1e-3, 1e-4], 'C': [1, 10, 100, 1000]},
     score = 'f1'
 
     hdf = pd.read_hdf(args.dataset, args.feature_extraction)
@@ -98,7 +98,7 @@ def classify():
     scores_std = [scores.std() for param, mean_score, scores in clf.grid_scores_]
 
     df = pd.DataFrame({'f1_weighted': mean_scores, 'std': scores_std, 'parameters': params})
-    dataset_name = args.dataset.rpartition('/')[2].split('.')[0]
+    dataset_name = args.dataset.rpartition('/')[2][:-3]
     hdf = pd.HDFStore("%s/%s.%s" % (args.dataset.rpartition('/')[0], dataset_name, 'h5'))
     hdf.put("%s_gridsearch" % args.feature_extraction, df, data_columns=True)
     hdf.close()
@@ -116,7 +116,7 @@ def classify():
 
     predmat = np.vstack((y_true, y_pred))
     df = pd.DataFrame(data=predmat, index=["True", "Prediction"], columns=X_test.index.values)
-    dataset_name = args.dataset.rpartition('/')[2].split('.')[0]
+    dataset_name = args.dataset.rpartition('/')[2][:-3]
     hdf = pd.HDFStore("%s/%s.%s" % (args.dataset.rpartition('/')[0], dataset_name, 'h5'))
     hdf.put("%s_prediction" % args.feature_extraction, df, data_columns=True)
     hdf.close()
@@ -130,7 +130,7 @@ def classify():
         print confmat
 
     df = pd.DataFrame(data=confmat, index=target_names, columns=target_names)
-    dataset_name = args.dataset.rpartition('/')[2].split('.')[0]
+    dataset_name = args.dataset.rpartition('/')[2][:-3]
     hdf = pd.HDFStore("%s/%s.%s" % (args.dataset.rpartition('/')[0], dataset_name, 'h5'))
     hdf.put("%s_confmat" % args.feature_extraction, df, data_columns=True)
     hdf.close()
