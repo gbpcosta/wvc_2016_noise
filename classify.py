@@ -117,7 +117,7 @@ def classify():
         print
 
     predmat = np.vstack((y_true, y_pred))
-    cols = np.hstack((y_true, X_test.index.values))
+    cols = ["%s_%s" % (y_true[i], X_test.index.values[i]) for i in xrange(len(y_true))]
     df = pd.DataFrame(data=predmat, index=["True", "Prediction"], columns=cols)
     dataset_name = args.dataset.rpartition('/')[2][:-3]
     hdf = pd.HDFStore("%s/%s.%s" % (args.dataset.rpartition('/')[0], dataset_name, 'h5'))
