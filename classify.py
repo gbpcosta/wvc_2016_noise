@@ -9,6 +9,8 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
 def plot_confusion_matrix(confmat, confmat_norm, target_names, filepath, title='Confusion matrix', cmap=plt.cm.Blues):
+    confmat_norm = confmat.astype('float') / confmat.sum(axis=1)[:, np.newaxis]
+
     plt.figure(num=None, figsize=(15, 13), dpi=300, facecolor='w') #, edgecolor='k')
 
     plt.imshow(cm_norm, interpolation='nearest', cmap=cmap)
@@ -115,7 +117,7 @@ def classify():
         print
 
     predmat = np.vstack((y_true, y_pred))
-    df = pd.DataFrame(data=predmat, index=["True", "Prediction"], columns=X_test.index.values)
+    df = pd.DataFrame(data=predmat, index=["True", "Prediction"], columns="%s_%s" % (y_true, X_test.index.values))
     dataset_name = args.dataset.rpartition('/')[2][:-3]
     hdf = pd.HDFStore("%s/%s.%s" % (args.dataset.rpartition('/')[0], dataset_name, 'h5'))
     hdf.put("%s_prediction" % args.feature_extraction, df, data_columns=True)
@@ -145,7 +147,7 @@ def classify():
 
     if args.plot_confmat == True:
         filename = "%s/confmat_%s_%s.png" % (args.dataset.rpartition('/')[0], dataset_name, args.feature_extraction)
-        plot_confusion_matrix(confmat, confmat_norm, target_names, filename=filename, title='Normalized confusion matrix')
+        plot_confusion_matrix(confmat, target_names, filename=filename, title='Normalized confusion matrix')
 
 
 if __name__ == '__main__':
