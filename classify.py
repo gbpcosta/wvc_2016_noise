@@ -62,7 +62,7 @@ def classify():
     X = hdf.drop("Labels", axis=1)
     y = hdf["Labels"]
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0, stratify=y)
 
     if args.feature_extraction == "SIFT":
         pca = PCA(n_components=0.9)
