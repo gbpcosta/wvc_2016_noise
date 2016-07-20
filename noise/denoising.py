@@ -20,7 +20,7 @@ os.chdir(pathImages)
 path, filename = os.path.split(os.getcwd())
 
 # Create folder
-pathNew = os.path.join(path, filename+"-"+args.method+"-"+str(args.level))
+pathNew = os.path.join(path, args.method+"-"+str(args.level)+"-"+filename)
 if not os.path.exists(pathNew):
     os.makedirs(pathNew)
 
