@@ -8,44 +8,6 @@ from sklearn.metrics import classification_report, confusion_matrix, f1_score
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
-def plot_confusion_matrix(confmat, confmat_norm, target_names, filepath, title='Confusion matrix', cmap=plt.cm.Blues):
-    confmat_norm = confmat.astype('float') / confmat.sum(axis=1)[:, np.newaxis]
-
-    plt.figure(num=None, figsize=(15, 13), dpi=300, facecolor='w') #, edgecolor='k')
-
-    plt.imshow(cm_norm, interpolation='nearest', cmap=cmap)
-    # plt.title(title, fontsize='xx-large')
-    plt.clim(vmin=0.0, vmax=1.0)
-    width, height = cm_norm.shape
-
-    for x in xrange(width):
-        for y in xrange(height):
-            if cm_norm[x][y] > 0.7:
-                plt.annotate(str(cm[x][y]), xy=(y, x),
-                        horizontalalignment='center',
-                        verticalalignment='center',
-                        color='white', fontsize=24)
-            else:
-                plt.annotate(str(cm[x][y]), xy=(y, x),
-                        horizontalalignment='center',
-                        verticalalignment='center',
-                        color='black', fontsize=24)
-
-    cbar = plt.colorbar(aspect=20, fraction=.12,pad=.02)
-    cbar.ax.tick_params(labelsize=20)
-
-    tick_marks = np.arange(len(target_names))
-    plt.xticks(tick_marks, target_names, rotation=60, fontsize=24)
-    plt.yticks(tick_marks, target_names, fontsize=24)
-
-    plt.tight_layout()
-
-    plt.ylabel('True label', fontsize=32)
-    plt.xlabel('Predicted label', fontsize=32)
-
-    plt.savefig(filepath, bbox_inches='tight')
-
-
 def crossclassify():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--dataset', required=True,        help="path to the dataset folder")
@@ -55,7 +17,6 @@ def crossclassify():
     parser.add_argument('-v', '--verbose', action='count', help="verbosity level.")
     args = parser.parse_args()
 
-    # tuned_parameters = [{'kernel': ['linear'], 'C': [1, 10, 100, 1000]}] # {'kernel': ['rbf'], 'gamma': [1e-3, 1e-4], 'C': [1, 10, 100, 1000]},
     score = 'f1'
 
     hdf = pd.read_hdf(args.dataset, args.feature_extraction)
@@ -73,12 +34,9 @@ def crossclassify():
             print "Number of components: %d" % pca.n_components_
             print "Total variance: %lf" % sum(pca.explained_variance_ratio_)
 
-    # TODO: find best params
     hdf = pd.read_hdf(args.dataset, "%s_gridsearch" % args.feature_extraction)
     best_params = hdf['parameters'].get(hdf['f1_weighted'].idxmax())
 
-
-    # TODO: train svm with X_train and best_params
     clf = svm.SVC()
     clf.set_params(**best_params)
     clf.fit(X_train, y_train)
