@@ -12,8 +12,6 @@ def crossclassify():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--dataset', required=True,        help="path to the dataset folder")
     parser.add_argument('-f', '--feature_extraction', required=True, help="Name of the feature extraction method that will be used (Possible methods: 'HOG', 'LBP', 'SIFT', ...).", choices=['HOG', 'LBP',  'SIFT'])
-    parser.add_argument('-pcm', '--plot_confmat', default=False, help="Plot a visualization of the confusion matrix.")
-    # TODO: use verbose parameter to track progress
     parser.add_argument('-v', '--verbose', action='count', help="verbosity level.")
     args = parser.parse_args()
 
@@ -76,7 +74,6 @@ def crossclassify():
             print
 
         target_names = list(set(y_true))
-        # print_names = [abrev_names[x] for x in target_names]
 
         confmat = confusion_matrix(y_true, y_pred, labels=target_names)
         if args.verbose >= 2:
@@ -90,10 +87,6 @@ def crossclassify():
         if args.verbose >= 2:
             print 'Normalized confusion matrix:'
             print cm_normalized
-
-        if args.plot_confmat == True:
-            filename = "%s/confmat_%s_%s.png" % (args.dataset.rpartition('/')[0], dataset_name, args.feature_extraction)
-            plot_confusion_matrix(confmat, target_names, filename=filename, title='Normalized confusion matrix')
 
     df = pd.DataFrame(data=f1s, index=noise, columns=["F1-score"])
     hdf = pd.HDFStore(args.dataset)
