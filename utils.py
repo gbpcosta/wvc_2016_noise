@@ -42,6 +42,39 @@ def plot_confusion_matrix(confmat, target_names, filepath, title='Confusion matr
 
 def create_crossclassify_table(h5_dir,
     feature_extraction,
+    select=None):
+
+    h5_files = ['%s/%s' % (h5_dir, h5) for h5 in os.listdir(h5_dir) if any(ext in h5 for ext in ['.h5'])]
+
+    ii = 0
+    cols = []
+
+    for h5_file in h5_files:
+      print h5_file
+      cols.append(h5_file.rpartition('/')[2].partition('_')[2].rpartition('.')[0])
+
+      if ii == 0:
+        hdf = pd.read_hdf(h5_file, '%s_crossclass' % feature_extraction)
+        ii = 1
+      else:
+        hdf2 = pd.read_hdf(h5_file, '%s_crossclass' % feature_extraction)
+        hdf = pd.concat([hdf, hdf2], axis=1)
+
+    hdf.columns = cols
+
+    if select is not None:
+        hdf = hdf[select]
+        hdf = hdf.T
+        hdf = hdf[select]
+    else:
+        hdf = hdf.T
+
+    return hdf
+
+def save_crossclassify_heatmap(h5_dir,
+    feature_extraction_methods,
+    filepath = '_%s.png',
+    cmap = plt.cm.Greens,
     select= ['original',
      'gaussian-10',
      'gaussian-20',
@@ -72,28 +105,63 @@ def create_crossclassify_table(h5_dir,
      'Median-11-sp-0.2',
      'Median-11-sp-0.3',
      'Median-11-sp-0.4',
-     'Median-11-sp-0.5']):
+     'Median-11-sp-0.5'],
+    vmin=None,
+    vmax=None):
 
-    h5_files = ['%s/%s' % (h5_dir, h5) for h5 in os.listdir(h5_dir) if any(ext in h5 for ext in ['.h5'])]
+    dataset_name = filter(None, h5_dir.split('/'))[-1]
 
-    ii = 0
-    cols = []
+    hdfs = {}
 
-    for h5_file in h5_files:
-      print h5_file
-      cols.append(h5_file.rpartition('/')[2].partition('_')[2].rpartition('.')[0])
+    if not isinstance(feature_extraction_methods, list):
+        feature_extraction_methods = [feature_extraction_methods]
 
-      if ii == 0:
-        hdf = pd.read_hdf(h5_file, '%s_crossclass' % feature_extraction)
-        ii = 1
-      else:
-        hdf2 = pd.read_hdf(h5_file, '%s_crossclass' % feature_extraction)
-        hdf = pd.concat([hdf, hdf2], axis=1)
+    for feature_extraction in feature_extraction_methods:
+        if select is None:
+            hdfs[feature_extraction] = create_crossclassify_table(h5_dir, feature_extraction)
+        else:
+            hdfs[feature_extraction] = create_crossclassify_table(h5_dir, feature_extraction, select)
 
-    hdf.columns = cols
+    for ii, feature_extraction in enumerate(feature_extraction_methods):
 
-    hdf = hdf[select]
-    hdf = hdf.T
-    hdf = hdf[select]
+        plt.figure(num=None, figsize=(15, 13), dpi=300, facecolor='w') #, edgecolor='k')
+        if isinstance(cmap, list):
+            plt.imshow(hdfs[feature_extraction], interpolation='nearest', cmap=cmap[ii])
+        else:
+          plt.imshow(hdfs[feature_extraction], interpolation='nearest', cmap=cmap)
 
-    return hdf
+        # plt.title(title, fontsize='xx-large')
+        if vmin is None:
+            if vmax is None:
+                vmax = max([hdfs[ff].max().max() for ff in feature_extraction_methods])
+
+                plt.clim(vmin=0.0, vmax=vmax)
+            else:
+                plt.clim(vmin=0.0, vmax=vmax)
+        else:
+            if vmax is None:
+                vmax = max([hdfs[ff].max().max() for ff in feature_extraction_methods])
+                plt.clim(vmin=vmin, vmax=vmax)
+            else:
+                plt.clim(vmin=vmin, vmax=vmax)
+
+        cbar = plt.colorbar(aspect=20, fraction=.12, pad=.02)
+        cbar.ax.tick_params(labelsize=12)
+
+        tick_marks = np.arange(len(select))
+        plt.xticks(tick_marks, select, rotation=90, fontsize=14)
+        plt.yticks(tick_marks, select, fontsize=14)
+
+        plt.tight_layout()
+        plt.ylabel('Training set', fontsize=20)
+        plt.xlabel('Test set', fontsize=20)
+
+        if filepath.count('%s') == 0:
+            plt.savefig(filepath, bbox_inches='tight')
+        elif filepath.count('%s') == 1:
+            plt.savefig(filepath % feature_extraction, bbox_inches='tight')
+        elif filepath.count('%s') == 2:
+            plt.savefig(filepath % (dataset_name, feature_extraction), bbox_inches='tight')
+        else:
+            print "Invalid filename, saving as 'default.png'."
+            plt.savefig('default.png', bbox_inches='tight')
