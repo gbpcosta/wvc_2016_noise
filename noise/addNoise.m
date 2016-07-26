@@ -66,7 +66,7 @@ function addNoise(pathImages, extImages, noiseType, noiseLevel)
         elseif strcmp(noiseType,'sp') == 1
             for j=1:length(imgVec)
                 %Salt and Pepper noise
-                noise = imnoise(imgVec{j},'salt & pepper',noiseLevel)
+                noise = imnoise(imgVec{j},'salt & pepper',noiseLevel);
                 str = strcat(newSubPath,'/',images(j).name);
                 disp(str)
                 imwrite(noise,str);
