@@ -1,3 +1,8 @@
+import pandas as pd
+import numpy as np
+import os
+import matplotlib.pyplot as plt
+
 def plot_confusion_matrix(confmat, target_names, filepath, title='Confusion matrix', cmap=plt.cm.Blues):
     confmat_norm = confmat.astype('float') / confmat.sum(axis=1)[:, np.newaxis]
 
@@ -35,4 +40,60 @@ def plot_confusion_matrix(confmat, target_names, filepath, title='Confusion matr
 
     plt.savefig(filepath, bbox_inches='tight')
 
-    
+def create_crossclassify_table(h5_dir,
+    feature_extraction,
+    select= ['original',
+     'gaussian-10',
+     'gaussian-20',
+     'gaussian-30',
+     'gaussian-40',
+     'gaussian-50',
+     'NLM-25-gaussian-10',
+     'NLM-25-gaussian-20',
+     'NLM-25-gaussian-30',
+     'NLM-25-gaussian-40',
+     'NLM-25-gaussian-50',
+     'poisson-10',
+     'poisson-10.5',
+     'poisson-11',
+     'poisson-11.5',
+     'poisson-12',
+     'NLM-25-poisson-10',
+     'NLM-25-poisson-10.5',
+     'NLM-25-poisson-11',
+     'NLM-25-poisson-11.5',
+     'NLM-25-poisson-12',
+     'sp-0.1',
+     'sp-0.2',
+     'sp-0.3',
+     'sp-0.4',
+     'sp-0.5',
+     'Median-11-sp-0.1',
+     'Median-11-sp-0.2',
+     'Median-11-sp-0.3',
+     'Median-11-sp-0.4',
+     'Median-11-sp-0.5']):
+
+    h5_files = ['%s/%s' % (h5_dir, h5) for h5 in os.listdir(h5_dir) if any(ext in h5 for ext in ['.h5'])]
+
+    ii = 0
+    cols = []
+
+    for h5_file in h5_files:
+      print h5_file
+      cols.append(h5_file.rpartition('/')[2].partition('_')[2].rpartition('.')[0])
+
+      if ii == 0:
+        hdf = pd.read_hdf(h5_file, '%s_crossclass' % feature_extraction)
+        ii = 1
+      else:
+        hdf2 = pd.read_hdf(h5_file, '%s_crossclass' % feature_extraction)
+        hdf = pd.concat([hdf, hdf2], axis=1)
+
+    hdf.columns = cols
+
+    hdf = hdf[select]
+    hdf = hdf.T
+    hdf = hdf[select]
+
+    return hdf
