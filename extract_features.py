@@ -88,7 +88,8 @@ def extract_features():
 
     df['Labels'] = labels
 
-    dataset_name = "%s_%s" % (args.dataset.rstrip('/').split('/')[-3], args.dataset.rstrip('/').split('/')[-1])
+    # set dataset_name as PARENTFOLDER_IMAGESFOLDER
+    dataset_name = "%s_%s" % (args.dataset.rstrip('/').split('/')[-2], args.dataset.rstrip('/').split('/')[-1])
     hdf = pd.HDFStore("%s/%s.%s" % (args.dataset.rstrip('/').rpartition('/')[0].rstrip('/'), dataset_name, 'h5'))
 
     hdf.put(args.feature_extraction, df, data_columns=True)
@@ -96,4 +97,7 @@ def extract_features():
 
 
 if __name__ == '__main__':
+    # Sample usage
+    #
+    # python extract_features.py -d /path/to/images/folder/ -f LBP
     extract_features()
