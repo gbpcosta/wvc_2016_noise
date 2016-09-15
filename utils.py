@@ -42,7 +42,7 @@ def plot_confusion_matrix(confmat, target_names, filepath, title='Confusion matr
 
 def create_crossclassify_table(h5_dir,
     feature_extraction,
-    select=None):
+    select=None, verbose=0):
 
     h5_files = ['%s/%s' % (h5_dir, h5) for h5 in os.listdir(h5_dir) if any(ext in h5 for ext in ['.h5'])]
 
@@ -50,15 +50,16 @@ def create_crossclassify_table(h5_dir,
     cols = []
 
     for h5_file in h5_files:
-      print h5_file
-      cols.append(h5_file.rpartition('/')[2].partition('_')[2].rpartition('.')[0])
+        if verbose > 0:
+            print "Processing file %s..." % h5_file
+        cols.append(h5_file.rpartition('/')[2].partition('_')[2].rpartition('.')[0])
 
-      if ii == 0:
-        hdf = pd.read_hdf(h5_file, '%s_crossclass' % feature_extraction)
-        ii = 1
-      else:
-        hdf2 = pd.read_hdf(h5_file, '%s_crossclass' % feature_extraction)
-        hdf = pd.concat([hdf, hdf2], axis=1)
+        if ii == 0:
+            hdf = pd.read_hdf(h5_file, '%s_crossclass' % feature_extraction)
+            ii = 1
+        else:
+            hdf2 = pd.read_hdf(h5_file, '%s_crossclass' % feature_extraction)
+            hdf = pd.concat([hdf, hdf2], axis=1)
 
     hdf.columns = cols
 
@@ -73,7 +74,7 @@ def create_crossclassify_table(h5_dir,
 
 def save_crossclassify_heatmap(h5_dir,
     feature_extraction_methods,
-    filepath = '_%s.png',
+    filename = '%s_%s.png',
     cmap = plt.cm.Greens,
     select= ['original',
      'gaussian-10',
@@ -156,12 +157,12 @@ def save_crossclassify_heatmap(h5_dir,
         plt.ylabel('Training set', fontsize=20)
         plt.xlabel('Test set', fontsize=20)
 
-        if filepath.count('%s') == 0:
-            plt.savefig(filepath, bbox_inches='tight')
-        elif filepath.count('%s') == 1:
-            plt.savefig(filepath % feature_extraction, bbox_inches='tight')
-        elif filepath.count('%s') == 2:
-            plt.savefig(filepath % (dataset_name, feature_extraction), bbox_inches='tight')
+        if filename.count('%s') == 0:
+            plt.savefig(os.path.join(h5_dir, filename), bbox_inches='tight')
+        elif filename.count('%s') == 1:
+            plt.savefig(os.path.join(h5_dir, filename % feature_extraction), bbox_inches='tight')
+        elif filename.count('%s') == 2:
+            plt.savefig(os.path.join(h5_dir, filename % (dataset_name, feature_extraction)), bbox_inches='tight')
         else:
             print "Invalid filename, saving as 'default.png'."
             plt.savefig('default.png', bbox_inches='tight')
