@@ -152,4 +152,7 @@ def classify():
 
 
 if __name__ == '__main__':
+    # Sample usage
+    #
+    # python classify.py -d /path/to/descritors/file.h5 -f LBP
     classify()
