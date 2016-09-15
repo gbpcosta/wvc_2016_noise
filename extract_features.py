@@ -1,4 +1,3 @@
-# import cv2
 import dsift
 import os, argparse
 import numpy as np
@@ -15,7 +14,6 @@ def find_smallest_shape(dataset, extensionsToCheck):
 
     for ii in classes:
         img_dir = '%s/%s' % (dataset, ii)
-        # img_files = ['%s/%s' % (img_dir, img) for img in os.listdir(img_dir)]
         img_files = ['%s/%s' % (img_dir, img) for img in os.listdir(img_dir) if any(ext in img for ext in extensionsToCheck)]
 
         for jj in img_files:
@@ -32,7 +30,7 @@ def find_smallest_shape(dataset, extensionsToCheck):
 def extract_features():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--dataset', required=True,        help="path to the dataset folder")
-    parser.add_argument('-f', '--feature_extraction', required=False, default="HOG", help="name of the feature extraction method that will be used (Possible methods: 'HOG', 'LBP', 'SIFT', ...).", choices=['HOG', 'LBP',  'SIFT'])
+    parser.add_argument('-f', '--feature_extraction', required=False, default="HOG", help="name of the feature extraction method that will be used (Possible methods: 'HOG', 'LBP', ...).", choices=['HOG', 'LBP'])
     # TODO: set filename used to save images as parameter
     parser.add_argument('-s', '--save_image', help="Save image  comparison of the original image and a visualization of the descriptors extracted.", default=False)
     # TODO: use verbose parameter to track progress
@@ -46,19 +44,18 @@ def extract_features():
     labels = []
     img_names = []
 
-    if(args.feature_extraction == "HOG" or args.feature_extraction == "SIFT"):
+    if(args.feature_extraction == "HOG"):
+        # Deals with images with different sizes (descritors should have the same size)
         new_shape = find_smallest_shape(args.dataset, extensionsToCheck)
 
     for ii in classes:
         img_dir = '%s/%s' % (args.dataset, ii)
-        # img_files = ['%s/%s' % (img_dir, img) for img in os.listdir(img_dir)]
         img_files = ['%s/%s' % (img_dir, img) for img in os.listdir(img_dir) if any(ext in img for ext in extensionsToCheck)]
 
         for jj in img_files:
             img = io.imread(jj, 1)
 
             if(args.feature_extraction == "HOG"):
-                # TODO: deal with images with different sizes (descritors should have the same size)
                 img_gray = color.rgb2gray(img)
 
                 if img_gray.shape[0] <= img_gray.shape[1]:
@@ -83,32 +80,10 @@ def extract_features():
 
                 fv_matrix = np.vstack([fv_matrix, lbp_hist]) if fv_matrix.size else lbp_hist
 
-            elif(args.feature_extraction == "SIFT"):
-                img_gray = color.rgb2gray(img)
-                img_gray = np.array(img_gray)
-
-                if img_gray.shape[0] <= img_gray.shape[1]:
-                    img_gray = resize(img_gray, new_shape)
-                else:
-                    img_gray = resize(img_gray, [new_shape[1], new_shape[0]])
-
-                # Sample Usage:
-                #     extractor = DsiftExtractor(gridSpacing,patchSize,[optional params])
-                #     feaArr,positions = extractor.process_image(Image)
-                # Source:  https://github.com/Yangqing/dsift-python
-
-                extractor = dsift.DsiftExtractor(8,16,1)
-                feaArr,positions = extractor.process_image(img_gray)
-
-                feaArr = np.reshape(feaArr, feaArr.shape[0] * feaArr.shape[1])
-
-                fv_matrix = np.vstack([fv_matrix, feaArr]) if fv_matrix.size else feaArr
-
             labels.append(ii)
             img_names.append(jj.split('/')[-1])
 
     columns = ['Feat'+str(i) for i in range(1, fv_matrix.shape[1]+1)]
-    # index = ['Sample'+str(i) for i in range(1, fv_matrix.shape[0]+1)]
     df = pd.DataFrame(data=fv_matrix, index=img_names, columns=columns)
 
     df['Labels'] = labels
@@ -116,10 +91,7 @@ def extract_features():
     dataset_name = "%s_%s" % (args.dataset.rstrip('/').split('/')[-3], args.dataset.rstrip('/').split('/')[-1])
     hdf = pd.HDFStore("%s/%s.%s" % (args.dataset.rstrip('/').rpartition('/')[0].rstrip('/'), dataset_name, 'h5'))
 
-    # if(args.feature_extraction == "SIFT"):
     hdf.put(args.feature_extraction, df, data_columns=True)
-    # else:
-    #     hdf.put(args.feature_extraction, df, format='table', data_columns=True)
     hdf.close()
 
 
