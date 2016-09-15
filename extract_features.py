@@ -3,7 +3,7 @@ import dsift
 import os, argparse
 import numpy as np
 import pandas as pd
-from skimage.feature import hog, local_binary_pattern, daisy
+from skimage.feature import hog, local_binary_pattern
 from skimage.transform import resize
 from skimage import io, color, exposure
 from scipy import misc
