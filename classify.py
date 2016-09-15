@@ -144,7 +144,7 @@ def classify():
     confmat_norm = confmat.astype('float') / confmat.sum(axis=1)[:, np.newaxis]
     if args.verbose >= 2:
         print 'Normalized confusion matrix:'
-        print cm_normalized
+        print confmat_norm
 
     if args.plot_confmat == True:
         filename = "%s/confmat_%s_%s.png" % (args.dataset.rpartition('/')[0], dataset_name, args.feature_extraction)
@@ -154,5 +154,5 @@ def classify():
 if __name__ == '__main__':
     # Sample usage
     #
-    # python classify.py -d /path/to/descritors/file.h5 -f LBP
+    # python classify.py -d /path/to/descritors/file.h5 -f LBP -vvv
     classify()
